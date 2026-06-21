@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界杯比分预测 · 然也出品</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0D1B2E;
+    color: #CCD8E8;
+    min-height: 100vh;
+    padding-bottom: 50px;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+
+  header {
+    background: linear-gradient(180deg, #131F30 0%, #0D1B2E 100%);
+    border-bottom: 1px solid #1E2E3E;
+    padding: 20px 0;
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 {
+    font-size: 20px; font-weight: 700; color: #fff;
+    display: flex; align-items: center; gap: 8px;
+  }
+  header h1 .gold { color: #F0C040; }
+  header p { font-size: 12px; color: #6A8CAA; margin-top: 4px; }
+
+  .tabs {
+    display: flex; gap: 4px; margin-top: 14px;
+    border-bottom: 1px solid #1E2E3E;
+  }
+  .tab {
+    padding: 9px 16px; font-size: 14px; color: #6A8CAA;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    background: none; border-left: none; border-right: none; border-top: none;
+    font-weight: 600;
+  }
+  .tab.active { color: #F0C040; border-bottom-color: #F0C040; }
+
+  main { padding-top: 20px; }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* 战绩横条 */
+  .record-bar {
+    display: flex; gap: 10px; margin-bottom: 20px;
+  }
+  .record-card {
+    flex: 1; background: #131F30; border: 1px solid #1E2E3E; border-radius: 10px;
+    padding: 12px; text-align: center;
+  }
+  .record-card .num { font-size: 22px; font-weight: 800; color: #F0C040; }
+  .record-card .lbl { font-size: 11px; color: #6A8CAA; margin-top: 2px; }
+
+  /* 比赛卡片 */
+  .match-card {
+    background: #131F30; border: 1px solid #1E2E3E; border-radius: 12px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .match-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; font-size: 11px; color: #6A8CAA;
+  }
+  .group-badge {
+    background: #1A2F45; color: #6A8CAA; padding: 2px 8px; border-radius: 4px;
+  }
+  .risk-badge {
+    padding: 2px 8px; border-radius: 4px; font-weight: 600;
+  }
+  .risk-low { background: #1A3320; color: #5AD48A; }
+  .risk-medium, .risk-low-medium { background: #2A2410; color: #F0C040; }
+  .risk-high { background: #331A1A; color: #E25A5A; }
+
+  .teams-row {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    margin-bottom: 12px;
+  }
+  .team-name { font-size: 17px; font-weight: 700; color: #fff; }
+  .vs-tag { font-size: 12px; color: #4A6A8A; }
+
+  .odds-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  }
+  .odds-box {
+    background: #0D1824; border-radius: 8px; padding: 8px; text-align: center;
+  }
+  .odds-box .lbl { font-size: 10px; color: #6A8CAA; }
+  .odds-box .val { font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .odds-fav { color: #5AD48A; }
+  .odds-mid { color: #F0C040; }
+  .odds-dog { color: #E25A5A; }
+
+  .signal-bar {
+    background: #0D1824; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
+    font-size: 12px; color: #8AAABB; display: flex; gap: 8px; align-items: baseline;
+  }
+  .signal-strength { font-weight: 700; padding: 1px 8px; border-radius: 4px; font-size: 11px; }
+  .sig-极强 { background: #2A1F10; color: #F0A040; }
+  .sig-强 { background: #102A3A; color: #5AC4DA; }
+  .sig-中 { background: #1A2A3A; color: #6A9ACA; }
+  .sig-弱 { background: #1A1A1A; color: #888; }
+
+  .wave-title {
+    font-size: 12px; color: #6A8CAA; margin-bottom: 8px; font-weight: 600;
+  }
+  .wave-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px;
+  }
+  .wave-item {
+    background: #0D1824; border: 1px solid #1A2A3A; border-radius: 6px;
+    padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .wave-item.best { background: #16241a; border-color: #2a5535; }
+  .wave-item .wlbl { font-size: 10px; color: #5A7A8A; }
+  .wave-item .wscore { font-size: 13px; font-weight: 700; }
+  .wave-item.best .wscore { color: #F0C040; }
+  .wave-item .wodds { font-size: 11px; color: #4A8A5A; font-weight: 600; }
+
+  .action-box {
+    background: #16241a; border: 1px solid #2a5535; border-radius: 8px;
+    padding: 10px 12px; font-size: 13px; color: #5AD48A; font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .handicap-line {
+    font-size: 12px; color: #8AAABB; padding: 0 2px;
+  }
+
+  /* 历史战绩列表 */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-btn {
+    background: #131F30; border: 1px solid #1E2E3E; color: #6A8CAA;
+    padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  }
+  .filter-btn.active { background: #1A2F45; color: #F0C040; border-color: #2A5070; }
+
+  .history-row {
+    background: #131F30; border: 1px solid #1E2E3E; border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 6px;
+    display: grid; grid-template-columns: 60px 1fr 60px 60px 56px;
+    align-items: center; gap: 8px; font-size: 13px;
+  }
+  .history-row .hdate { color: #6A8CAA; font-size: 11px; }
+  .history-row .hteams { color: #fff; font-weight: 500; }
+  .history-row .hscore { text-align: center; font-weight: 700; color: #F0C040; }
+  .pill { font-size: 10px; padding: 3px 7px; border-radius: 8px; text-align: center; font-weight: 700; }
+  .pill.hit { background: #1A3320; color: #5AD48A; }
+  .pill.miss { background: #331A1A; color: #E25A5A; }
+
+  .history-row-v2 {
+    background: #131F30; border: 1px solid #1E2E3E; border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 8px;
+  }
+  .hr-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px; font-size: 11px;
+  }
+  .history-row-v2 .hdate { color: #6A8CAA; }
+  .history-row-v2 .hteams { color: #fff; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .history-row-v2 .actual-tag {
+    font-size: 11px; color: #F0C040; font-weight: 600; margin-left: 6px;
+  }
+  .options-line { font-size: 12px; color: #6A8CAA; }
+  .options-line b { font-weight: 700; }
+
+  @media (max-width: 600px) {
+    .history-row { grid-template-columns: 1fr; gap: 3px; }
+    .history-row .hscore { text-align: left; }
+  }
+
+  footer {
+    text-align: center; padding: 24px 16px; color: #2A4A5A; font-size: 11px;
+  }
+
+  .disclaimer {
+    background: #2A2010; border: 1px solid #4A3A15; border-radius: 8px;
+    padding: 10px 14px; font-size: 11px; color: #C0A050; margin-bottom: 20px;
+  }
+
+  /* 权重总览卡片 */
+  .weight-overview {
+    background: #131F30; border: 1px solid #1E2E3E; border-radius: 12px;
+    padding: 16px; margin-bottom: 20px;
+  }
+  .wo-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .wo-sub { font-size: 11px; color: #6A8CAA; margin-bottom: 14px; }
+  .wo-bars { display: flex; flex-direction: column; gap: 10px; }
+  .wo-bar-row { display: grid; grid-template-columns: 90px 1fr 40px; align-items: center; gap: 10px; }
+  .wo-bar-label { font-size: 12px; color: #CCD8E8; font-weight: 600; }
+  .wo-bar-track { background: #0D1824; border-radius: 6px; height: 10px; overflow: hidden; }
+  .wo-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #F0C040, #5AD48A); }
+  .wo-bar-pct { font-size: 12px; color: #F0C040; font-weight: 700; text-align: right; }
+
+  /* 玩法配置标签 */
+  .market-row {
+    display: grid; grid-template-columns: 60px 1fr; gap: 10px; align-items: start;
+    margin-bottom: 10px; font-size: 12px;
+  }
+  .market-label { color: #6A8CAA; font-weight: 600; padding-top: 2px; }
+  .market-content { color: #CCD8E8; }
+  .weight-tag {
+    display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 6px;
+    font-weight: 700; margin-right: 6px;
+  }
+  .wt-重配 { background: #2A1F10; color: #F0A040; }
+  .wt-中配 { background: #102A3A; color: #5AC4DA; }
+  .wt-轻配 { background: #1A2A2A; color: #6AAA8A; }
+  .wt-低配 { background: #1A1A1A; color: #888; }
+  .wt-不建议, .wt-不参与 { background: #2A1010; color: #C06060; }
+
+  /* 1000点模拟页面 */
+  .sim-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .sim-summary .sc {
+    background: #131F30; border: 1px solid #1E2E3E; border-radius: 10px;
+    padding: 12px; text-align: center;
+  }
+  .sim-summary .sc .n { font-size: 20px; font-weight: 800; color: #F0C040; }
+  .sim-summary .sc .l { font-size: 11px; color: #6A8CAA; margin-top: 2px; }
+
+  .sim-card {
+    background: #131F30; border: 1px solid #1E2E3E; border-radius: 12px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .sim-card .sim-title {
+    font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .sim-card .sim-total { font-size: 13px; color: #F0C040; font-weight: 700; }
+  .sim-card .sim-sub { font-size: 11px; color: #6A8CAA; margin-bottom: 12px; }
+
+  .sim-markets { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .sim-market-row {
+    background: #0D1824; border-radius: 8px; padding: 8px 12px;
+    display: flex; justify-content: space-between; align-items: center; font-size: 12px;
+  }
+  .sim-market-row .smlabel { color: #6A8CAA; font-weight: 600; min-width: 50px; }
+  .sim-market-row .smpts { color: #CCD8E8; font-weight: 700; }
+  .sim-market-row .smpayout { color: #5AD48A; font-size: 11px; }
+
+  .sim-wave-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .sim-wave-item {
+    background: #0D1824; border-radius: 6px; padding: 6px 10px;
+    display: flex; justify-content: space-between; align-items: center; font-size: 11px;
+  }
+  .sim-wave-item .swscore { font-weight: 700; color: #F0C040; }
+  .sim-wave-item .swpts { color: #CCD8E8; }
+  .sim-wave-item .swpayout { color: #5AD48A; font-weight: 600; }
+
+  .sim-result-box {
+    background: linear-gradient(135deg, #16241a 0%, #131F30 100%);
+    border: 1px solid #2a5535; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 12px;
+  }
+  .sr-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 4px; font-size: 13px;
+  }
+  .sr-row .srlabel { color: #8AAABB; }
+  .sr-row .srval { font-weight: 700; color: #fff; }
+  .sr-row .srval.profit { color: #5AD48A; }
+  .sr-row .srval.rate { color: #F0C040; font-size: 18px; }
+  .sr-note {
+    font-size: 10px; color: #4A7A9A; margin-top: 6px;
+    border-top: 1px solid #1a3a2a; padding-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1><span class="gold">⚽</span> 世界杯比分预测</h1>
+    <p>然也 出品 · 盘口数据 + 波胆分散投注指南</p>
+    <div class="tabs">
+      <button class="tab active" data-panel="today">今日推荐</button>
+      <button class="tab" data-panel="sim">1000点模拟</button>
+      <button class="tab" data-panel="history">历史战绩</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="panel active" id="today">
+    <div class="disclaimer">⚠ 娱乐分析用途，不构成投注建议 · 以下为6月21日未开赛场次的赛前分析</div>
+
+    <div class="weight-overview" id="weightOverview"></div>
+
+    <div id="bettingList"></div>
+  </section>
+
+  <section class="panel" id="sim">
+    <div class="disclaimer">🎮 每场比赛各自独立模拟1000点数分配，纯游戏化演示，非真实货币，4场互不影响</div>
+    <div class="sim-summary" id="simSummary"></div>
+    <div class="chart-wrap"><canvas id="simPieChart" role="img" aria-label="堆叠柱状图显示4场比赛各自1000点在主胜让球波胆三种玩法间的分配"></canvas></div>
+    <div class="chart-wrap"><canvas id="simBarChart" role="img" aria-label="柱状图对比4场比赛在三玩法完全命中情况下的收益率百分比"></canvas></div>
+    <div id="simDetail"></div>
+  </section>
+
+  <section class="panel" id="history">
+    <div class="disclaimer">📊 仅统计已结束比赛（6月18-20日，共12场），21日及以后场次结果出来后会更新</div>
+    <div class="record-bar" id="recordBar"></div>
+    <div class="filter-bar">
+      <button class="filter-btn active" data-f="all">全部</button>
+      <button class="filter-btn" data-f="hit">任一命中</button>
+      <button class="filter-btn" data-f="dirhit">全部未中</button>
+    </div>
+    <div id="historyList"></div>
+  </section>
+
+</main>
+
+<footer>
+  然也 @小球迷工具2026
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const BETTING_DATA = [{"date": "2026-06-21", "time": "01:00", "group": "F组", "home": "荷兰", "away": "瑞典", "odds_home": 1.59, "odds_draw": 3.65, "odds_away": 4.35, "signal": "弱", "signal_note": "三路赔率分散，三个最高概率比分赔率完全相同(7.00)", "recommend_score": "2-1", "recommend_score_odds": 7.0, "wave_options": [{"label": "首选", "score": "2-1", "odds": 7.0}, {"label": "次选", "score": "1-0", "odds": 7.0}, {"label": "备选", "score": "1-1", "odds": 7.0}, {"label": "冷门", "score": "1-2", "odds": 15.0}], "handicap": {"side": "荷兰", "line": "0/-0.5", "odds": 1.75}, "action": "弃权或仅小注让球盘，不押具体比分", "risk": "high"}, {"date": "2026-06-21", "time": "04:00", "group": "E组", "home": "德国", "away": "科特迪瓦", "odds_home": 1.35, "odds_draw": 4.25, "odds_away": 6.3, "signal": "中", "signal_note": "让2.5球接近平水，中等强度悬殊", "recommend_score": "2-0", "recommend_score_odds": 6.6, "wave_options": [{"label": "首选", "score": "2-0", "odds": 6.6}, {"label": "次选", "score": "2-1", "odds": 6.9}, {"label": "备选", "score": "1-0", "odds": 6.9}, {"label": "大胜", "score": "3-0", "odds": 9.0}], "handicap": {"side": "德国", "line": "-1/-1.5", "odds": 1.99}, "action": "让球盘 + 波胆分散，中等仓位", "risk": "medium"}, {"date": "2026-06-21", "time": "08:00", "group": "E组", "home": "厄瓜多尔", "away": "库拉索", "odds_home": 1.08, "odds_draw": 6.8, "odds_away": 17.0, "signal": "极强", "signal_note": "让4.5球几近平水，真实力悬殊典范", "recommend_score": "3-0", "recommend_score_odds": 5.1, "wave_options": [{"label": "首选", "score": "3-0", "odds": 5.1}, {"label": "次选", "score": "2-0", "odds": 4.9}, {"label": "备选", "score": "4-0", "odds": 6.7}, {"label": "大胜", "score": "5-0", "odds": 11.0}], "handicap": {"side": "厄瓜多尔", "line": "-2.5/-3", "odds": 2.42}, "action": "本轮最强信号，重仓让球盘 + 波胆分散", "risk": "low"}, {"date": "2026-06-21", "time": "12:00", "group": "F组", "home": "突尼斯", "away": "日本", "odds_home": 6.1, "odds_draw": 3.9, "odds_away": 1.4, "signal": "强", "signal_note": "日本让1球接近平水，客队明显占优", "recommend_score": "0-2", "recommend_score_odds": 5.7, "wave_options": [{"label": "首选", "score": "0-2", "odds": 5.7}, {"label": "次选", "score": "0-1", "odds": 5.4}, {"label": "备选", "score": "1-2", "odds": 6.9}, {"label": "冷门", "score": "1-1", "odds": 7.25}], "handicap": {"side": "日本", "line": "-0.5/-1", "odds": 2.23}, "action": "让球盘 + 波胆分散，中高仓位", "risk": "low-medium"}];
+const TRACK_DATA = [{"date": "2026-06-18", "group": "K组", "home": "葡萄牙", "away": "刚果(金)", "actual": "1-1", "options": ["2-1", "2-0", "1-1", "1-2"], "any_hit": true}, {"date": "2026-06-18", "group": "L组", "home": "英格兰", "away": "克罗地亚", "actual": "4-2", "options": ["2-1", "2-0", "1-1", "3-1"], "any_hit": false}, {"date": "2026-06-18", "group": "L组", "home": "加纳", "away": "巴拿马", "actual": "1-0", "options": ["1-1", "2-1", "1-0", "0-0"], "any_hit": true}, {"date": "2026-06-18", "group": "K组", "home": "乌兹别克", "away": "哥伦比亚", "actual": "1-3", "options": ["1-1", "0-1", "0-2", "1-2"], "any_hit": false}, {"date": "2026-06-19", "group": "A组", "home": "捷克", "away": "南非", "actual": "1-1", "options": ["1-0", "1-1", "2-1", "0-1"], "any_hit": true}, {"date": "2026-06-19", "group": "B组", "home": "瑞士", "away": "波斯尼亚", "actual": "4-1", "options": ["1-0", "2-1", "1-1", "1-2"], "any_hit": false}, {"date": "2026-06-19", "group": "B组", "home": "加拿大", "away": "卡塔尔", "actual": "6-0", "options": ["1-1", "1-0", "2-0", "0-1"], "any_hit": false}, {"date": "2026-06-19", "group": "A组", "home": "墨西哥", "away": "韩国", "actual": "1-0", "options": ["2-1", "2-0", "1-0", "1-1"], "any_hit": true}, {"date": "2026-06-20", "group": "D组", "home": "美国", "away": "澳洲", "actual": "2-0", "options": ["2-0", "2-1", "1-1", "1-2"], "any_hit": true}, {"date": "2026-06-20", "group": "C组", "home": "苏格兰", "away": "摩洛哥", "actual": "0-1", "options": ["0-2", "0-1", "1-2", "1-1"], "any_hit": true}, {"date": "2026-06-20", "group": "C组", "home": "巴西", "away": "海地", "actual": "3-0", "options": ["3-0", "4-0", "2-0", "5-0"], "any_hit": true}, {"date": "2026-06-20", "group": "D组", "home": "土耳其", "away": "巴拉圭", "actual": "0-1", "options": ["1-0", "1-1", "2-1", "0-1"], "any_hit": true}];
+const STATS_DATA = {"total_with_prediction": 12, "any_hit_count": 8, "any_hit_rate": 0.6667};
+const STRATEGY_DATA = {"title": "本轮娱乐配置参考", "subtitle": "综合主胜/让球/波胆三种玩法的权重建议，非真实投注金额", "matches": [{"home": "荷兰", "away": "瑞典", "signal": "弱", "main_market": {"side": "不参与", "note": "三路赔率均衡，方向不明"}, "handicap": {"side": "荷兰", "line": "0/-0.5", "weight": "低配", "odds": 1.75}, "wave": {"weight": "不建议", "options": ["2-1", "1-0", "1-1", "1-2"]}, "overall_weight": 10}, {"home": "德国", "away": "科特迪瓦", "signal": "中", "main_market": {"side": "德国胜", "note": "中等优势"}, "handicap": {"side": "德国", "line": "-1/-1.5", "weight": "中配", "odds": 1.99}, "wave": {"weight": "轻配", "options": ["2-0", "2-1", "1-0", "3-0"]}, "overall_weight": 25}, {"home": "厄瓜多尔", "away": "库拉索", "signal": "极强", "main_market": {"side": "厄瓜多尔胜", "note": "实力悬殊，方向确定性最高"}, "handicap": {"side": "厄瓜多尔", "line": "-2.5/-3", "weight": "重配", "odds": 2.42}, "wave": {"weight": "重配", "options": ["3-0", "2-0", "4-0", "5-0"]}, "overall_weight": 40}, {"home": "突尼斯", "away": "日本", "signal": "强", "main_market": {"side": "日本胜", "note": "客队明显占优"}, "handicap": {"side": "日本", "line": "-0.5/-1", "weight": "中配", "odds": 2.23}, "wave": {"weight": "轻配", "options": ["0-2", "0-1", "1-2", "1-1"]}, "overall_weight": 25}]};
+const SIM_DATA = [{"match": "荷兰vs瑞典", "signal": "弱", "total_points": 1000, "pick_side": "荷兰", "main_points": 300, "main_odds": 1.59, "main_payout": 477, "handicap_side": "荷兰", "handicap_line": "0/-0.5", "handicap_points": 300, "handicap_odds": 1.75, "handicap_payout": 525, "wave_points": 400, "wave_detail": [{"score": "2-1", "odds": 7.0, "points": 115, "payout": 808}, {"score": "1-0", "odds": 7.0, "points": 115, "payout": 808}, {"score": "1-1", "odds": 7.0, "points": 115, "payout": 808}, {"score": "1-2", "odds": 15.0, "points": 54, "payout": 808}], "summary": {"total_payout": 1810, "total_profit": 810, "profit_rate": 81.0, "hit_score": "2-1"}}, {"match": "德国vs科特迪瓦", "signal": "中", "total_points": 1000, "pick_side": "德国", "main_points": 350, "main_odds": 1.35, "main_payout": 473, "handicap_side": "德国", "handicap_line": "-1/-1.5", "handicap_points": 350, "handicap_odds": 1.99, "handicap_payout": 696, "wave_points": 300, "wave_detail": [{"score": "2-0", "odds": 6.6, "points": 82, "payout": 543}, {"score": "2-1", "odds": 6.9, "points": 79, "payout": 543}, {"score": "1-0", "odds": 6.9, "points": 79, "payout": 543}, {"score": "3-0", "odds": 9.0, "points": 60, "payout": 543}], "summary": {"total_payout": 1712, "total_profit": 712, "profit_rate": 71.2, "hit_score": "2-0"}}, {"match": "厄瓜多尔vs库拉索", "signal": "极强", "total_points": 1000, "pick_side": "厄瓜多尔", "main_points": 250, "main_odds": 1.08, "main_payout": 270, "handicap_side": "厄瓜多尔", "handicap_line": "-2.5/-3", "handicap_points": 350, "handicap_odds": 2.42, "handicap_payout": 847, "wave_points": 400, "wave_detail": [{"score": "3-0", "odds": 5.1, "points": 122, "payout": 625}, {"score": "2-0", "odds": 4.9, "points": 127, "payout": 625}, {"score": "4-0", "odds": 6.7, "points": 93, "payout": 625}, {"score": "5-0", "odds": 11.0, "points": 57, "payout": 625}], "summary": {"total_payout": 1742, "total_profit": 742, "profit_rate": 74.2, "hit_score": "3-0"}}, {"match": "突尼斯vs日本", "signal": "强", "total_points": 1000, "pick_side": "日本", "main_points": 300, "main_odds": 1.4, "main_payout": 420, "handicap_side": "日本", "handicap_line": "-0.5/-1", "handicap_points": 400, "handicap_odds": 2.23, "handicap_payout": 892, "wave_points": 300, "wave_detail": [{"score": "0-2", "odds": 5.7, "points": 82, "payout": 466}, {"score": "0-1", "odds": 5.4, "points": 86, "payout": 466}, {"score": "1-2", "odds": 6.9, "points": 68, "payout": 466}, {"score": "1-1", "odds": 7.25, "points": 64, "payout": 466}], "summary": {"total_payout": 1778, "total_profit": 778, "profit_rate": 77.8, "hit_score": "0-2"}}];
+
+</script>
+<script>
+// ===== Tab 切换 =====
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.panel).classList.add('active');
+  });
+});
+
+function oddsClass(odds) {
+  if (odds < 2.0) return 'odds-fav';
+  if (odds < 4.5) return 'odds-mid';
+  return 'odds-dog';
+}
+
+// ===== 权重总览（替代金额方案） =====
+function renderWeightOverview() {
+  const card = document.getElementById('weightOverview');
+  const bars = STRATEGY_DATA.matches.map(m => `
+    <div class="wo-bar-row">
+      <div class="wo-bar-label">${m.home}vs${m.away}</div>
+      <div class="wo-bar-track"><div class="wo-bar-fill" style="width:${m.overall_weight}%"></div></div>
+      <div class="wo-bar-pct">${m.overall_weight}%</div>
+    </div>
+  `).join('');
+
+  card.innerHTML = `
+    <div class="wo-title">本轮关注度配置</div>
+    <div class="wo-sub">${STRATEGY_DATA.subtitle}</div>
+    <div class="wo-bars">${bars}</div>
+  `;
+}
+
+// ===== 今日推荐面板 =====
+function renderBettingGuide() {
+  const list = document.getElementById('bettingList');
+  list.innerHTML = BETTING_DATA.map((m, idx) => {
+    const strategy = STRATEGY_DATA.matches[idx];
+
+    const waveItems = m.wave_options.map((w, i) => `
+      <div class="wave-item ${i === 0 ? 'best' : ''}">
+        <span class="wlbl">${w.label}</span>
+        <span class="wscore">${w.score}</span>
+        <span class="wodds">${w.odds.toFixed(2)}</span>
+      </div>
+    `).join('');
+
+    return `
+      <div class="match-card">
+        <div class="match-top">
+          <span class="group-badge">${m.group} · ${m.time}</span>
+          <span class="risk-badge risk-${m.risk}">${riskLabel(m.risk)}</span>
+        </div>
+        <div class="teams-row">
+          <span class="team-name">${m.home}</span>
+          <span class="vs-tag">VS</span>
+          <span class="team-name">${m.away}</span>
+        </div>
+
+        <div class="signal-bar">
+          <span class="signal-strength sig-${m.signal}">信号${m.signal}</span>
+          <span>${m.signal_note}</span>
+        </div>
+
+        <div class="market-row">
+          <span class="market-label">主胜盘</span>
+          <span class="market-content">
+            <span class="weight-tag wt-${weightFromOverall(strategy.overall_weight, 'main')}">${weightFromOverall(strategy.overall_weight, 'main')}</span>
+            ${strategy.main_market.side} <span style="color:#6A8CAA">(${strategy.main_market.note})</span>
+            · 主${m.odds_home.toFixed(2)} 平${m.odds_draw.toFixed(2)} 客${m.odds_away.toFixed(2)}
+          </span>
+        </div>
+
+        <div class="market-row">
+          <span class="market-label">让球盘</span>
+          <span class="market-content">
+            <span class="weight-tag wt-${strategy.handicap.weight}">${strategy.handicap.weight}</span>
+            ${strategy.handicap.side} ${strategy.handicap.line} @ ${strategy.handicap.odds.toFixed(2)}
+          </span>
+        </div>
+
+        <div class="market-row">
+          <span class="market-label">波胆盘</span>
+          <span class="market-content">
+            <span class="weight-tag wt-${strategy.wave.weight}">${strategy.wave.weight}</span>
+            4选项分散，覆盖比分如下
+          </span>
+        </div>
+
+        <div class="wave-title">波胆比分参考（反向加权覆盖）</div>
+        <div class="wave-grid">${waveItems}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function weightFromOverall(w, type) {
+  if (type === 'main') {
+    if (w >= 40) return '重配';
+    if (w >= 25) return '中配';
+    if (w >= 15) return '轻配';
+    return '不参与';
+  }
+  return '中配';
+}
+
+function riskLabel(risk) {
+  const map = { 'low': '关注度高', 'medium': '关注度中', 'high': '关注度低', 'low-medium': '关注度中高' };
+  return map[risk] || risk;
+}
+
+
+// ===== 历史战绩面板（4选项任一命中口径） =====
+function renderRecordBar() {
+  const bar = document.getElementById('recordBar');
+  bar.innerHTML = `
+    <div class="record-card">
+      <div class="num">${STATS_DATA.total_with_prediction}</div>
+      <div class="lbl">总场次</div>
+    </div>
+    <div class="record-card">
+      <div class="num">${STATS_DATA.any_hit_count}</div>
+      <div class="lbl">任一命中场数</div>
+    </div>
+    <div class="record-card">
+      <div class="num">${Math.round(STATS_DATA.any_hit_rate * 100)}%</div>
+      <div class="lbl">命中率</div>
+    </div>
+  `;
+}
+
+let historyFilter = 'all';
+
+function filterHistory() {
+  switch (historyFilter) {
+    case 'hit': return TRACK_DATA.filter(m => m.any_hit);
+    case 'dirhit': return TRACK_DATA.filter(m => !m.any_hit);
+    default: return TRACK_DATA;
+  }
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const data = filterHistory();
+  if (data.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#4A6A8A;">暂无记录</div>';
+    return;
+  }
+  list.innerHTML = data.map(m => {
+    const pillClass = m.any_hit ? 'hit' : 'miss';
+    const pillText = m.any_hit ? '命中' : '未中';
+    const optionsStr = m.options.map(o => o === m.actual ? `<b style="color:#5AD48A">${o}</b>` : o).join(' / ');
+    return `
+      <div class="history-row-v2">
+        <div class="hr-top">
+          <span class="hdate">${m.date.slice(5)} [${m.group}]</span>
+          <span class="pill ${pillClass}">${pillText}</span>
+        </div>
+        <div class="hteams">${m.home} vs ${m.away} <span class="actual-tag">实际 ${m.actual}</span></div>
+        <div class="options-line">4选项：${optionsStr}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    historyFilter = btn.dataset.f;
+    renderHistory();
+  });
+});
+
+// ===== 1000点模拟配置页面 =====
+function renderSimSummary() {
+  const avgRate = SIM_DATA.reduce((s, m) => s + m.summary.profit_rate, 0) / SIM_DATA.length;
+  const maxRate = Math.max(...SIM_DATA.map(m => m.summary.profit_rate));
+  const minRate = Math.min(...SIM_DATA.map(m => m.summary.profit_rate));
+
+  document.getElementById('simSummary').innerHTML = `
+    <div class="sc"><div class="n">+${avgRate.toFixed(1)}%</div><div class="l">平均收益率</div></div>
+    <div class="sc"><div class="n">+${maxRate.toFixed(1)}%</div><div class="l">最高收益率</div></div>
+    <div class="sc"><div class="n">+${minRate.toFixed(1)}%</div><div class="l">最低收益率</div></div>
+    <div class="sc"><div class="n">1000</div><div class="l">每场独立点数</div></div>
+  `;
+}
+
+function renderSimDetail() {
+  const container = document.getElementById('simDetail');
+  container.innerHTML = SIM_DATA.map(m => {
+    const waveItems = m.wave_detail.map(w => `
+      <div class="sim-wave-item">
+        <span class="swscore">${w.score}</span>
+        <span class="swpts">${w.points}点</span>
+        <span class="swpayout">→${w.payout}</span>
+      </div>
+    `).join('');
+
+    const s = m.summary;
+
+    return `
+      <div class="sim-card">
+        <div class="sim-title">
+          <span>${m.match}（押${m.pick_side}胜）</span>
+          <span class="sim-total">每场1000点</span>
+        </div>
+        <div class="sim-sub">信号${m.signal} · 三玩法按信号强度分配占比</div>
+
+        <div class="sim-result-box">
+          <div class="sr-row">
+            <span class="srlabel">完全命中总回报</span>
+            <span class="srval">${s.total_payout}点</span>
+          </div>
+          <div class="sr-row">
+            <span class="srlabel">净盈利</span>
+            <span class="srval profit">+${s.total_profit}点</span>
+          </div>
+          <div class="sr-row">
+            <span class="srlabel">收益率</span>
+            <span class="srval rate">+${s.profit_rate}%</span>
+          </div>
+          <div class="sr-note">假设比分为${s.hit_score}，主胜/让球/波胆三个玩法同时命中</div>
+        </div>
+
+        <div class="sim-markets">
+          <div class="sim-market-row">
+            <span class="smlabel">主胜盘</span>
+            <span class="smpts">${m.main_points}点 @${m.main_odds.toFixed(2)}</span>
+            <span class="smpayout">命中→${m.main_payout}点</span>
+          </div>
+          <div class="sim-market-row">
+            <span class="smlabel">让球盘</span>
+            <span class="smpts">${m.handicap_points}点 ${m.handicap_side}${m.handicap_line}@${m.handicap_odds.toFixed(2)}</span>
+            <span class="smpayout">命中→${m.handicap_payout}点</span>
+          </div>
+          <div class="sim-market-row">
+            <span class="smlabel">波胆盘</span>
+            <span class="smpts">${m.wave_points}点（4选项分散）</span>
+            <span class="smpayout"></span>
+          </div>
+        </div>
+        <div class="sim-wave-grid">${waveItems}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSimCharts() {
+  // 图1: 四场玩法占比对比(每场都是1000点为基准)
+  new Chart(document.getElementById('simPieChart'), {
+    type: 'bar',
+    data: {
+      labels: SIM_DATA.map(m => m.match),
+      datasets: [
+        { label: '主胜', data: SIM_DATA.map(m => m.main_points), backgroundColor: '#6A8CAA' },
+        { label: '让球', data: SIM_DATA.map(m => m.handicap_points), backgroundColor: '#4AAACA' },
+        { label: '波胆', data: SIM_DATA.map(m => m.wave_points), backgroundColor: '#F0C040' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { color: '#CCD8E8', font: { size: 11 } } }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#6A8CAA', font: { size: 10 } }, grid: { display: false } },
+        y: { stacked: true, max: 1000, ticks: { color: '#6A8CAA' }, grid: { color: '#1E2E3E' } }
+      }
+    }
+  });
+
+  // 图2: 完全命中情况下各场收益率对比
+  new Chart(document.getElementById('simBarChart'), {
+    type: 'bar',
+    data: {
+      labels: SIM_DATA.map(m => m.match),
+      datasets: [
+        { label: '完全命中收益率(%)', data: SIM_DATA.map(m => m.summary.profit_rate), backgroundColor: '#5AD48A' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { ticks: { color: '#6A8CAA', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#6A8CAA', callback: v => '+' + v + '%' }, grid: { color: '#1E2E3E' } }
+      }
+    }
+  });
+}
+
+// ===== 初始化 =====
+renderWeightOverview();
+renderBettingGuide();
+renderRecordBar();
+renderHistory();
+renderSimSummary();
+renderSimDetail();
+renderSimCharts();
+
+</script>
+</body>
+</html>
